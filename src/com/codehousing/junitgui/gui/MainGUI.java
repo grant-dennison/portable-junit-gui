@@ -19,6 +19,8 @@ import java.net.URL;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MainGUI extends JPanel {
 //    private JEditorPane htmlPane;
@@ -26,7 +28,7 @@ public class MainGUI extends JPanel {
     private JTree tree;
     private URL helpURL;
     private final DefaultMutableTreeNode rootGuiNode;
-    private final TestTreeNode[] rootNodes;
+    private final List<TestTreeNode> rootNodes;
     private DefaultMutableTreeNode currentGuiNode;
     private TestTreeNode currentNode;
 //    private BookInfo currentBook;
@@ -40,13 +42,13 @@ public class MainGUI extends JPanel {
     //Optionally set the look and feel.
     private static boolean useSystemLookAndFeel = false;
 
-    public MainGUI(TestTreeNode... nodes) {
+    public MainGUI(Class<?>... testClasses) {
         super(new GridLayout(1,0));
 
-        this.rootNodes = nodes;
+        this.rootNodes = Arrays.stream(testClasses).map(TestTreeNode::new).collect(Collectors.toList());
         //Create the nodes.
         rootGuiNode = new DefaultMutableTreeNode("All Tests");
-        fillInChildren(rootGuiNode, Arrays.asList(nodes));
+        fillInChildren(rootGuiNode, this.rootNodes);
 
         //Create a tree that allows one selection at a time.
         tree = new JTree(rootGuiNode);
@@ -64,7 +66,7 @@ public class MainGUI extends JPanel {
         //Create the scroll pane and add the tree to it.
         JScrollPane treeView = new JScrollPane(tree);
 
-                JButton button = new JButton("click");
+                JButton button = new JButton("Run Test(s)");
                 button.addActionListener(e -> {
                     System.out.println("himom");
                     JUnitCore junit = new JUnitCore();
@@ -123,7 +125,7 @@ public class MainGUI extends JPanel {
     }
 
     /** Required by TreeSelectionListener interface. */
-    public void valueChanged(TreeSelectionEvent e) {
+    private void valueChanged(TreeSelectionEvent e) {
        currentGuiNode = (DefaultMutableTreeNode)
                 tree.getLastSelectedPathComponent();
 
@@ -133,36 +135,6 @@ public class MainGUI extends JPanel {
         if(nodeInfo instanceof TestTreeNode) {
             currentNode = (TestTreeNode) nodeInfo;
             System.out.println("Node: " + currentNode.getDescription());
-        }
-//        if (node.isLeaf()) {
-//            currentBook = (BookInfo)nodeInfo;
-////            displayURL(currentBook.bookURL);
-//            if (DEBUG) {
-//                System.out.print(currentBook.bookURL + ":  \n    ");
-//            }
-//        } else {
-////            displayURL(helpURL);
-//        }
-//        if (DEBUG) {
-//            System.out.println(nodeInfo.toString());
-//        }
-    }
-
-    private class BookInfo {
-        public String bookName;
-        public URL bookURL;
-
-        public BookInfo(String book, String filename) {
-            bookName = book;
-            bookURL = getClass().getResource(filename);
-            if (bookURL == null) {
-                System.err.println("Couldn't find file: "
-                        + filename);
-            }
-        }
-
-        public String toString() {
-            return bookName;
         }
     }
 
@@ -192,11 +164,11 @@ public class MainGUI extends JPanel {
         }
 
         //Create and set up the window.
-        JFrame frame = new JFrame("TreeDemo");
+        JFrame frame = new JFrame("Portable JUnit GUI");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Add content to the window.
-        frame.add(new MainGUI(new TestTreeNode(ExampleSuite.class), new TestTreeNode(ThirdTest.class)));
+        frame.add(new MainGUI(ExampleSuite.class, ThirdTest.class));
 
         //Display the window.
         frame.pack();
@@ -211,16 +183,14 @@ public class MainGUI extends JPanel {
     public static void main(String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                try {
-                    UIManager.setLookAndFeel(
-                            UIManager.getSystemLookAndFeelClassName());
-                } catch (Exception e) {
-                    System.err.println("Couldn't use system look and feel.");
-                }
-                createAndShowGUI();
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            try {
+                UIManager.setLookAndFeel(
+                        UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                System.err.println("Couldn't use system look and feel.");
             }
+            createAndShowGUI();
         });
     }
 }

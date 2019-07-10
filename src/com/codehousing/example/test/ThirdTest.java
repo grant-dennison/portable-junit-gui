@@ -1,10 +1,11 @@
 package com.codehousing.example.test;
 
+import com.codehousing.junitgui.gui.TestDescription;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-
+@TestDescription("A test that does something (not so) fancy")
 public class ThirdTest {
 
     @Test
